@@ -4,13 +4,15 @@
 #include "third_party/freertos_kernel/include/FreeRTOS.h"
 #include "third_party/freertos_kernel/include/task.h"
 
+
 namespace coralmicro {
 
-constexpr Gpio kLedPin = Gpio::kAd26;
 
-void DelayMicros(uint32_t us) {
-  uint64_t start_time = TimerMicros();
-  while ((TimerMicros() - start_time) < us) {
+constexpr Gpio kLedPin = Gpio::kPwm0;
+
+void DelayNanoseconds(uint32_t ns) {
+  uint64_t start_time = TimerMicros() * 1000;
+  while ((TimerMicros() * 1000 - start_time) < ns) {
     // Busy wait
   }
 }
@@ -18,14 +20,14 @@ void DelayMicros(uint32_t us) {
 void SendBit(bool bit) {
   if (bit) {
     GpioSet(kLedPin, true);
-    DelayMicros(0.8);
+    DelayNanoseconds(800);
     GpioSet(kLedPin, false);
-    DelayMicros(0.45);
+    DelayNanoseconds(450);
   } else {
     GpioSet(kLedPin, true);
-    DelayMicros(0.4);
+    DelayNanoseconds(400);
     GpioSet(kLedPin, false);
-    DelayMicros(0.85);
+    DelayNanoseconds(850);
   }
 }
 
@@ -56,7 +58,7 @@ void SendColor(uint8_t red, uint8_t green, uint8_t blue) {
     SendColor(0, 0, 255); // Blue
 
     // Reset the LEDs
-    DelayMicros(50); // Wait for at least 50us
+    DelayNanoseconds(50000); // Wait for at least 50µs
 
     vTaskDelay(pdMS_TO_TICKS(1000)); // Wait 1 second
   }
