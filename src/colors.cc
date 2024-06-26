@@ -1,72 +1,79 @@
 #include "libs/base/gpio.h"
 #include "libs/base/led.h"
 #include "libs/base/timer.h"
+#include "third_party/nxp/rt1176-sdk/devices/MIMXRT1176/drivers/fsl_gpt.h"
+#include "third_party/nxp/rt1176-sdk/devices/MIMXRT1176/drivers/fsl_common_arm.h"
 #include "third_party/freertos_kernel/include/FreeRTOS.h"
 #include "third_party/freertos_kernel/include/task.h"
 
+namespace coralmicro 
+{
+    constexpr Gpio kLedPin = Gpio::kPwm0;
+    // WS2812B timing (in nanoseconds)
+    constexpr uint32_t T0H = 400 - 150;
+    constexpr uint32_t T1H = 800 - 150;
+    constexpr uint32_t T0L = 850 - 150;
+    constexpr uint32_t T1L = 450 - 150;
+    constexpr uint32_t RES = 6000;
 
-namespace coralmicro {
+    void InitializeTimer() {
+        gpt_config_t gptConfig;
+        GPT_GetDefaultConfig(&gptConfig);
+        gptConfig.enableRunInDoze = true;
+        GPT_Init(GPT1, &gptConfig);
+        
+        // Enable GPT1 clock - this might need to be done differently in Coral Micro
+        // You may need to use a different API or it might be enabled by default
+    }
 
+    void DelayNanoseconds(uint32_t ns) {
+        uint32_t start = TimerMicros();
+        while ((TimerMicros() - start) * 1000 < ns) {
+            __asm__ volatile ("nop");
+        }
+    }
 
-constexpr Gpio kLedPin = Gpio::kPwm0;
+    inline void SendBit(bool bit) {
+        GpioSet(kLedPin, true);
+        DelayNanoseconds(bit ? T1H : T0H);
+        GpioSet(kLedPin, false);
+        DelayNanoseconds(bit ? T1L : T0L);
+    }
 
-void DelayNanoseconds(uint32_t ns) {
-  uint64_t start_time = TimerMicros() * 1000;
-  while ((TimerMicros() * 1000 - start_time) < ns) {
-    // Busy wait
-  }
-}
+    inline void SendByte(uint8_t byte) {
+        for (int i = 7; i >= 0; --i) {
+            SendBit(byte & (1 << i));
+        }
+    }
 
-void SendBit(bool bit) {
-  if (bit) {
-    GpioSet(kLedPin, true);
-    DelayNanoseconds(800);
-    GpioSet(kLedPin, false);
-    DelayNanoseconds(450);
-  } else {
-    GpioSet(kLedPin, true);
-    DelayNanoseconds(400);
-    GpioSet(kLedPin, false);
-    DelayNanoseconds(850);
-  }
-}
+    inline void SendColor(uint8_t red, uint8_t green, uint8_t blue) {
+        uint32_t primask = DisableGlobalIRQ();
+        SendByte(green);
+        SendByte(red);
+        SendByte(blue);
+        EnableGlobalIRQ(primask);
+    }
 
-void SendByte(uint8_t byte) {
-  for (int i = 7; i >= 0; --i) {
-    SendBit(byte & (1 << i));
-  }
-}
+    inline void ResetDelay() {
+        DelayNanoseconds(RES);
+    }
 
-void SendColor(uint8_t red, uint8_t green, uint8_t blue) {
-  SendByte(green);
-  SendByte(red);
-  SendByte(blue);
-}
-
-[[noreturn]] void Main() {
-  printf("WS2812B Example!\r\n");
-  // Turn on Status LED to show the board is on.
-  LedSet(Led::kStatus, true);
-
-  GpioSetMode(kLedPin, GpioMode::kOutput);
-  TimerInit();
-
-  while (true) {
-    // Send color data to the LEDs (example: red, green, blue)
-    SendColor(255, 0, 0); // Red
-    SendColor(0, 255, 0); // Green
-    SendColor(0, 0, 255); // Blue
-
-    // Reset the LEDs
-    DelayNanoseconds(50000); // Wait for at least 50µs
-
-    vTaskDelay(pdMS_TO_TICKS(1000)); // Wait 1 second
-  }
-}
-
+    [[noreturn]] void Main() {
+        printf("WS2812B Example using GPIO!\r\n");
+        LedSet(Led::kStatus, true);
+        
+        InitializeTimer();
+        GpioSetMode(kLedPin, GpioMode::kOutput);
+        
+        while (true) {
+            SendColor(0, 255, 0);  // Green
+            ResetDelay();
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+    }
 }  // namespace coralmicro
 
 extern "C" [[noreturn]] void app_main(void* param) {
-  (void)param;
-  coralmicro::Main();
+    (void)param;
+    coralmicro::Main();
 }

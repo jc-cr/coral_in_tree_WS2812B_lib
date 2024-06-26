@@ -20,7 +20,7 @@ bash build.sh
 To upload the application to the Coral Dev Board, you can run the following command:
 
 ```bash
-python3 scripts/flashtool.py --app coral_in_tree_voice_detection
+python3 scripts/flashtool.py --app coral_in_tree_WS2812B_lib
 ```
 
 ## Run the application
