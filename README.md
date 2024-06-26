@@ -6,6 +6,8 @@
 For this build we are using the In-Tree method described [here](https://coral.ai/docs/dev-board-micro/freertos/#freertos-tasks).
 Once you have setup the coral micro directory, then you can clone this repo into the `apps` directory.
 
+For precise timing, you'll need to add the following to line`${PROJECT_SOURCE_DIR}/third_party/nxp/rt1176-sdk/devices/MIMXRT1176/drivers/fsl_qtmr.c` to the CMakeLists.txt file in the coral micro directory`libs/nxp/rt1176-sdk/CMakeLists.txt`.
+
 
 ## Build the application
 
