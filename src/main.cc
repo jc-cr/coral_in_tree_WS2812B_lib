@@ -29,7 +29,6 @@ inline void SendByte(uint8_t byte) {
 }
 
 inline void SendColor(uint8_t red, uint8_t green, uint8_t blue) {
-    printf("Sending Color: R=%d, G=%d, B=%d\r\n", red, green, blue);
     uint32_t primask = DisableGlobalIRQ();
     SendByte(green);
     SendByte(red);
@@ -44,17 +43,29 @@ inline void SendColor(uint8_t red, uint8_t green, uint8_t blue) {
     
     while (true) {
         SendColor(255, 0, 0);
+        SendColor(255, 0, 0);
+        SendColor(255, 0, 0);
         ResetDelay();
-        vTaskDelay(pdMS_TO_TICKS(1000));
+
+        // Add 2 sec delay
+        vTaskDelay(pdMS_TO_TICKS(2000));
         
         SendColor(0, 255, 0);
+        SendColor(0, 255, 0);
+        SendColor(0, 255, 0);
         ResetDelay();
-        vTaskDelay(pdMS_TO_TICKS(1000));
+
+        vTaskDelay(pdMS_TO_TICKS(2000));
 
         
         SendColor(0, 0, 255);
+        SendColor(0, 0, 255);
+        SendColor(0, 0, 255);
         ResetDelay();
-        vTaskDelay(pdMS_TO_TICKS(1000));
+
+
+        vTaskDelay(pdMS_TO_TICKS(2000));
+
     }
 }
 

@@ -40,14 +40,22 @@ _ZN10coralmicro7SendBitEb:
     // Delay for T0H or T1H
     cmp r0, #0
     beq .zero_bit
-    // T1H delay (650ns @ 800MHz = 520 cycles)
-    movs r6, #173  // 520/3 (rounded down)
+    // T1H delay 
+    // (800ns @ 800MHz = 640 cycles)
+    // 640/3 = 213
+    // (650ns @ 800MHz = 520 cycles)
+    // 520/3 = 173
+    movs r6, #250
 1:  subs r6, r6, #1
     bne 1b
     b .end_high
 .zero_bit:
-    // T0H delay (250ns @ 800MHz = 200 cycles)
-    movs r6, #67  // 200/3 (rounded down)
+    // T0H delay 
+    // (400ns @ 800MHz = 320 cycles)
+    // 320/3 = 106
+    // (250ns @ 800MHz = 200 cycles)
+    // 200/3 = 67
+    movs r6, #150
 1:  subs r6, r6, #1
     bne 1b
 .end_high:
@@ -58,14 +66,21 @@ _ZN10coralmicro7SendBitEb:
     // Delay for T0L or T1L
     cmp r0, #0
     beq .zero_bit_low
-    // T1L delay (300ns @ 800MHz = 240 cycles)
-    movs r6, #80  // 240/3 (rounded down)
+    // T1L delay 
+    // (450ns @ 800MHz = 360 cycles)
+    // 360/3 = 120
+    // (300ns @ 800MHz = 240 cycles)
+    // 240/3 = 80
+    movs r6, #170
 1:  subs r6, r6, #1
     bne 1b
     b .end
 .zero_bit_low:
-    // T0L delay (700ns @ 800MHz = 560 cycles)
-    movs r6, #187  // 560/3 (rounded down)
+    // T0L delay 
+    // (850ns @ 800MHz = 680 cycles)
+    // 680/3 = 226
+    // // (700ns @ 800MHz = 560 cycles) 560/3 (rounded down)
+    movs r6, #280
 1:  subs r6, r6, #1
     bne 1b
 .end:
@@ -107,9 +122,10 @@ _ZN10coralmicro10ResetDelayEv:
     // Set GPIO low
     str r5, [r4, #GPIO_DR_CLEAR]
     
-    // Delay for 50,000 μs (50 ms) @ 800MHz = 40,000,000 cycles
+    // Delay for 50,000 μs (50 ms) @ 800MHz = 40,000,000 cycles; 40000000/3 = 13333333
+    // Delay for 7, 00 μs (7 ms) @ 800MHz = 5,600,000 cycles; 5600000/3 = 1866666
     // Delay for 6, 00 μs (6 ms) @ 800MHz = 4,800,000 cycles
-    ldr r6, =1600000 // 4,800,000/3 (rounded down)
+    ldr r6, =1866666
 1:  subs r6, r6, #1
     bne 1b
     
